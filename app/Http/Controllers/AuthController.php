@@ -34,14 +34,11 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dữ liệu không hợp lệ',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return back()->withErrors($validator)->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         $credentials = $request->only('email', 'password');
@@ -50,13 +47,10 @@ class AuthController extends Controller
         $user = User::where('email', $credentials['email'])->first();
         
         if (!$user || !Hash::check($credentials['password'], $user->password_hash)) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Email hoặc mật khẩu không chính xác'
-                ], 401);
-            }
-            return back()->withErrors(['email' => 'Email hoặc mật khẩu không chính xác'])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Email hoặc mật khẩu không chính xác'
+            ], 401);
         }
 
         // Đăng nhập user
@@ -82,7 +76,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'full_name' => 'required|string|max:120',
             'email' => 'required|email|unique:users,email|max:160',
-            'phone' => 'nullable|string|max:30',
+            'phone' => 'required|string|max:30|unique:users,phone',
             'password' => 'required|min:6|confirmed',
             'driver_license_no' => 'nullable|string|max:60',
             'address' => 'nullable|string|max:255',
@@ -93,6 +87,8 @@ class AuthController extends Controller
             'email.email' => 'Email không hợp lệ',
             'email.unique' => 'Email này đã được sử dụng',
             'email.max' => 'Email không được quá 160 ký tự',
+            'phone.required' => 'Số điện thoại là bắt buộc',
+            'phone.unique' => 'Số điện thoại này đã được sử dụng',
             'phone.max' => 'Số điện thoại không được quá 30 ký tự',
             'password.required' => 'Mật khẩu là bắt buộc',
             'password.min' => 'Mật khẩu phải có ít nhất 6 ký tự',
@@ -102,14 +98,11 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dữ liệu không hợp lệ',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return back()->withErrors($validator)->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Dữ liệu không hợp lệ',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         try {
@@ -148,19 +141,13 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            // Log the error for debugging
-            \Log::error('Registration error: ' . $e->getMessage(), [
-                'exception' => $e,
-                'request_data' => $request->all()
-            ]);
+            // Log the error for debugging (only log, don't include full exception)
+            \Log::error('Registration error: ' . $e->getMessage());
             
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Có lỗi xảy ra khi đăng ký: ' . $e->getMessage()
-                ], 500);
-            }
-            return back()->withErrors(['error' => 'Có lỗi xảy ra khi đăng ký: ' . $e->getMessage()])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra khi đăng ký. Vui lòng thử lại.'
+            ], 500);
         }
     }
 

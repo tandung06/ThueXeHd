@@ -121,7 +121,6 @@
                     <a href="{{ route('services') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium">Dịch vụ</a>
                     <a href="{{ route('fleet') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium">Đội xe</a>
                     <a href="{{ route('about') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium">Giới thiệu</a>
-                    <a href="{{ route('contact') }}" class="block px-3 py-2 text-gray-700 hover:text-blue-600 font-medium">Liên hệ</a>
                     <div class="px-3 py-2">
                         <div class="flex items-center space-x-2 text-sm mb-3">
                             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +194,6 @@
                         <li><a href="{{ route('services') }}" class="text-gray-300 hover:text-white transition-colors">Dịch vụ</a></li>
                         <li><a href="{{ route('fleet') }}" class="text-gray-300 hover:text-white transition-colors">Đội xe</a></li>
                         <li><a href="{{ route('about') }}" class="text-gray-300 hover:text-white transition-colors">Giới thiệu</a></li>
-                        <li><a href="{{ route('contact') }}" class="text-gray-300 hover:text-white transition-colors">Liên hệ</a></li>
                     </ul>
                 </div>
 

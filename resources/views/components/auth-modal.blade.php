@@ -1,5 +1,5 @@
 <!-- Auth Modal Component -->
-<div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+<div id="auth-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         <!-- Modal Header -->
         <div class="flex justify-between items-center p-6 border-b">
@@ -51,27 +51,27 @@
             <form id="register-form" class="space-y-4 hidden" method="POST" action="{{ route('auth.register.post') }}">
                 @csrf
                 <div>
-                    <label for="register-full-name" class="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
+                    <label for="register-full-name" class="block text-sm font-medium text-gray-700 mb-1">Họ và tên <span class="text-red-500">*</span></label>
                     <input type="text" id="register-full-name" name="full_name" required 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label for="register-email" class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
                     <input type="email" id="register-email" name="email" required 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label for="register-phone" class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
-                    <input type="tel" id="register-phone" name="phone" 
+                    <label for="register-phone" class="block text-sm font-medium text-gray-700 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
+                    <input type="tel" id="register-phone" name="phone" required 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
+                    <label for="register-password" class="block text-sm font-medium text-gray-700 mb-1">Mật khẩu <span class="text-red-500">*</span></label>
                     <input type="password" id="register-password" name="password" required 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
                 <div>
-                    <label for="register-password-confirmation" class="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu</label>
+                    <label for="register-password-confirmation" class="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu <span class="text-red-500">*</span></label>
                     <input type="password" id="register-password-confirmation" name="password_confirmation" required 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
@@ -177,17 +177,23 @@ document.getElementById('login-form').addEventListener('submit', async function(
             body: formData
         });
         
+        console.log('Login response status:', response.status);
         const result = await response.json();
         
         if (result.success) {
             showAuthMessage(result.message, 'success');
+            // Reload immediately after showing success message
             setTimeout(() => {
-                closeAuthModal();
-                // Reload page to show logged in state
                 window.location.reload();
-            }, 1500);
+            }, 300);
         } else {
-            showAuthMessage(result.message || 'Đăng nhập thất bại');
+            // Show error message
+            if (result.errors) {
+                const errorMessages = Object.values(result.errors).flat().join(', ');
+                showAuthMessage(errorMessages);
+            } else {
+                showAuthMessage(result.message || 'Đăng nhập thất bại');
+            }
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -216,21 +222,17 @@ document.getElementById('register-form').addEventListener('submit', async functi
             body: formData
         });
         
-        console.log('Response status:', response.status);
-        console.log('Response headers:', response.headers);
-        
+        console.log('Register response status:', response.status);
         const result = await response.json();
         console.log('Register response:', result);
         
         if (result.success) {
             console.log('Registration successful, showing message...');
             showAuthMessage(result.message, 'success');
+            // Reload immediately after showing success message
             setTimeout(() => {
-                console.log('Closing modal and reloading page...');
-                closeAuthModal();
-                // Reload page to show logged in state
                 window.location.reload();
-            }, 1500);
+            }, 300);
         } else {
             if (result.errors) {
                 const errorMessages = Object.values(result.errors).flat().join(', ');
@@ -308,10 +310,26 @@ async function checkAuthStatus() {
 // Initialize auth status check
 document.addEventListener('DOMContentLoaded', checkAuthStatus);
 
-// Close modal when clicking outside
-document.getElementById('auth-modal').addEventListener('click', function(e) {
+// Close modal when clicking outside (but not when dragging text)
+let isDragging = false;
+
+document.getElementById('auth-modal').addEventListener('mousedown', function(e) {
     if (e.target === this) {
+        isDragging = false;
+    }
+});
+
+document.getElementById('auth-modal').addEventListener('mousemove', function(e) {
+    if (e.target === this && e.buttons === 1) {
+        isDragging = true;
+    }
+});
+
+document.getElementById('auth-modal').addEventListener('click', function(e) {
+    // Only close if clicking directly on the background and not dragging
+    if (e.target === this && !isDragging && !window.getSelection().toString()) {
         closeAuthModal();
     }
+    isDragging = false;
 });
 </script>
