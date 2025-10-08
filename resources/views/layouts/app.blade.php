@@ -64,7 +64,6 @@
                         <a href="{{ route('services') }}" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Dịch vụ</a>
                         <a href="{{ route('fleet') }}" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Đội xe</a>
                         <a href="{{ route('about') }}" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Giới thiệu</a>
-                        <a href="{{ route('contact') }}" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">Liên hệ</a>
                     </div>
 
                     <!-- Contact Info & CTA -->
@@ -75,6 +74,30 @@
                             </svg>
                             <span class="text-gray-700 font-medium">Hotline: 1900 1234</span>
                         </div>
+                        
+                        <!-- Auth Buttons -->
+                        <div id="auth-buttons" class="flex items-center space-x-2">
+                            <button onclick="openAuthModal('login')" class="text-gray-700 hover:text-blue-600 font-medium transition-colors">
+                                Đăng nhập
+                            </button>
+                            <button onclick="openAuthModal('register')" class="btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                                Đăng ký
+                            </button>
+                        </div>
+
+                        <!-- User Menu (hidden by default) -->
+                        <div id="user-menu" class="hidden flex items-center space-x-2">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm font-medium" id="user-initial">U</span>
+                                </div>
+                                <span class="text-gray-700 font-medium" id="user-name">User</span>
+                            </div>
+                            <button onclick="logout()" class="text-gray-700 hover:text-red-600 font-medium transition-colors">
+                                Đăng xuất
+                            </button>
+                        </div>
+
                         <a href="{{ route('booking') }}" class="btn-primary text-white px-6 py-2 rounded-lg font-medium">
                             Đặt xe ngay
                         </a>
@@ -271,7 +294,107 @@
                 }
             });
         });
+
+        // Auth Functions
+        async function logout() {
+            try {
+                const response = await fetch('{{ route("auth.logout") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    updateUserInterface(null);
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        // Open Auth Modal
+        function openAuthModal(type) {
+            const modal = document.getElementById('auth-modal');
+            const title = document.getElementById('modal-title');
+            
+            if (type === 'login') {
+                title.textContent = 'Đăng nhập';
+                switchTab('login');
+            } else {
+                title.textContent = 'Đăng ký';
+                switchTab('register');
+            }
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Switch Tab
+        function switchTab(type) {
+            const loginTab = document.getElementById('login-tab');
+            const registerTab = document.getElementById('register-tab');
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            
+            if (type === 'login') {
+                loginTab.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                loginTab.classList.remove('text-gray-600', 'hover:text-gray-900');
+                registerTab.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                registerTab.classList.add('text-gray-600', 'hover:text-gray-900');
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            } else {
+                registerTab.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                registerTab.classList.remove('text-gray-600', 'hover:text-gray-900');
+                loginTab.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                loginTab.classList.add('text-gray-600', 'hover:text-gray-900');
+                registerForm.classList.remove('hidden');
+                loginForm.classList.add('hidden');
+            }
+        }
+
+        // Update User Interface
+        function updateUserInterface(user) {
+            const authButtons = document.getElementById('auth-buttons');
+            const userMenu = document.getElementById('user-menu');
+            const userName = document.getElementById('user-name');
+            const userInitial = document.getElementById('user-initial');
+            
+            if (user) {
+                authButtons.classList.add('hidden');
+                userMenu.classList.remove('hidden');
+                userName.textContent = user.name;
+                userInitial.textContent = user.name.charAt(0).toUpperCase();
+            } else {
+                authButtons.classList.remove('hidden');
+                userMenu.classList.add('hidden');
+            }
+        }
+
+        // Check Authentication Status on Page Load
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/auth/check');
+                const result = await response.json();
+                
+                if (result.authenticated) {
+                    updateUserInterface(result.user);
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        }
+
+        // Initialize auth status check
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
     </script>
+
+    <!-- Include Auth Modal Component -->
+    @include('components.auth-modal')
 
     @stack('scripts')
 </body>
